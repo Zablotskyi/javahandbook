@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Java Handbook</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<div class="page-layout">
+
+    <div th:replace="~{fragments/layout :: leftSidebar}"></div>
+
+    <main class="content">
+        <article class="article-card">
+            <h1>Java Handbook</h1>
+
+            <p>
+                Ласкаво просимо до Java Handbook — довідника з Java для навчання,
+                повторення матеріалу та підготовки до співбесід.
+            </p>
+
+            <p>
+                Тут будуть зібрані короткі та зрозумілі пояснення по Java Core,
+                OOP, Collections, Stream API, багатопотоковості, Spring, Hibernate,
+                SQL та іншим важливим темам.
+            </p>
+
+            <h2>Що буде на сайті?</h2>
+
+            <ul>
+                <li>короткі пояснення тем;</li>
+                <li>приклади Java-коду;</li>
+                <li>матеріали для співбесід;</li>
+                <li>практичні нотатки;</li>
+                <li>структурований довідник по Java.</li>
+            </ul>
+
+            <h2>Приклад блоку коду</h2>
+
+            <pre><code>public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, Java Handbook!");
+    }
+}</code></pre>
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/layout :: rightSidebar}"></div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

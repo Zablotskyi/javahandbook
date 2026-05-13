@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Адмінка | Java Handbook</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<div class="page-layout">
+
+    <div th:replace="~{fragments/layout :: leftSidebar}"></div>
+
+    <main class="content">
+        <article class="article-card">
+            <h1>Адмінка</h1>
+
+            <p class="article-description">
+                Тут можна додати нову статтю до Java Handbook.
+                Поки що стаття зберігається тільки в пам’яті програми.
+            </p>
+
+            <form class="admin-form"
+                  th:action="@{/admin/articles}"
+                  th:object="${articleForm}"
+                  method="post">
+
+                <div class="form-group">
+                    <label for="title">Заголовок статті</label>
+                    <input type="text"
+                           id="title"
+                           th:field="*{title}"
+                           placeholder="Наприклад: Що таке JVM?"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="slug">Slug для URL</label>
+
+                    <div class="slug-row">
+                        <input type="text"
+                               id="slug"
+                               th:field="*{slug}"
+                               placeholder="Наприклад: java-jvm"
+                               required>
+
+                        <button type="button" class="slug-button" onclick="generateSlugFromTitle()">
+                            Згенерувати
+                        </button>
+                    </div>
+
+                    <small>
+                        Slug автоматично генерується із заголовка статті.
+                        Наприклад: <b>/articles/shcho-take-jvm</b>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Короткий опис</label>
+                    <input type="text"
+                           id="description"
+                           th:field="*{description}"
+                           placeholder="Короткий опис статті"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="menuGroup">Розділ меню</label>
+                    <select id="menuGroup" th:field="*{menuGroup}">
+                        <option value="java">Java Core</option>
+                        <option value="oop">OOP</option>
+                        <option value="collections">Collections</option>
+                        <option value="spring">Spring</option>
+                    </select>
+
+                    <small>
+                        Поки це поле використовується як підготовка до майбутнього динамічного меню.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Текст статті</label>
+
+                    <div class="editor-actions">
+                        <button type="button" onclick="insertHeading()">Вставити заголовок</button>
+                        <button type="button" onclick="insertParagraph()">Вставити абзац</button>
+                        <button type="button" onclick="insertCodeBlock()">Вставити блок коду</button>
+                        <button type="button" onclick="insertImage()">Вставити зображення</button>
+                    </div>
+
+                    <textarea id="content"
+                              th:field="*{content}"
+                              rows="18"
+                              placeholder="Введи текст статті..."
+                              required></textarea>
+
+                    <small>
+                        Можна використовувати HTML-теги:
+                        &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;pre&gt;, &lt;code&gt;, &lt;img&gt;.
+                    </small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="save-button">
+                        Зберегти статтю
+                    </button>
+                </div>
+
+            </form>
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/layout :: rightSidebar}"></div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

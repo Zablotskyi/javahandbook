@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} + ' | Java Handbook'">Article | Java Handbook</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<div class="page-layout">
+
+    <div th:replace="~{fragments/layout :: leftSidebar}"></div>
+
+    <main class="content">
+        <article class="article-card">
+            <h1 th:text="${title}">Назва статті</h1>
+
+            <p class="article-description" th:text="${description}">
+                Короткий опис статті.
+            </p>
+
+            <div class="article-content" th:utext="${content}">
+                Текст статті
+            </div>
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/layout :: rightSidebar}"></div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>
