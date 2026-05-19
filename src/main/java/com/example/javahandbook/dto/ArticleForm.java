@@ -2,6 +2,7 @@ package com.example.javahandbook.dto;
 
 public class ArticleForm {
 
+    private String originalSlug;
     private String title;
     private String slug;
     private String description;
@@ -9,6 +10,14 @@ public class ArticleForm {
     private String content;
 
     public ArticleForm() {
+    }
+
+    public String getOriginalSlug() {
+        return originalSlug;
+    }
+
+    public void setOriginalSlug(String originalSlug) {
+        this.originalSlug = originalSlug;
     }
 
     public String getTitle() {
