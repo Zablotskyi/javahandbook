@@ -13,6 +13,12 @@
     <nav class="header-nav">
         <a href="/">Головна</a>
         <a href="/admin">Адмінка</a>
+
+        <form th:action="@{/logout}" method="post" class="logout-form">
+            <button type="submit" class="logout-button">
+                Вийти
+            </button>
+        </form>
     </nav>
 </header>
 
