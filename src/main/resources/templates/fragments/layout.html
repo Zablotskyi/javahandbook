@@ -54,7 +54,14 @@
 </aside>
 
 <footer class="site-footer" th:fragment="footer">
-    <p>© 2026 Java Handbook. Навчальний довідник по Java.</p>
+    <p>
+        © 2026 Java Handbook. Навчальний довідник по Java.
+        <span class="footer-separator">|</span>
+        <span>
+            Відвідувань сайту:
+            <strong th:text="${visitsCount}">0</strong>
+        </span>
+    </p>
 </footer>
 
 </body>

@@ -174,13 +174,19 @@ code {
 /* FOOTER */
 
 .site-footer {
-    height: 60px;
+    min-height: 60px;
     background-color: #1f2937;
     color: #d1d5db;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 14px;
+    padding: 12px 20px;
+    text-align: center;
+}
+
+.site-footer p {
+    margin: 0;
 }
 
 /* RESPONSIVE */
@@ -595,5 +601,14 @@ code {
 }
 
 .logout-button:hover {
+    color: #f89820;
+}
+
+.footer-separator {
+    margin: 0 10px;
+    color: #6b7280;
+}
+
+.site-footer strong {
     color: #f89820;
 }
