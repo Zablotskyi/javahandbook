@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Розділи меню | Java Handbook</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<div class="page-layout">
+
+    <div th:replace="~{fragments/layout :: leftSidebar}"></div>
+
+    <main class="content">
+        <article class="article-card">
+            <h1>Розділи меню</h1>
+
+            <p class="article-description">
+                Тут можна створювати, редагувати та видаляти розділи лівого меню.
+            </p>
+
+            <div th:replace="~{fragments/admin-nav :: adminNav}"></div>
+
+            <section class="admin-section">
+                <h2 th:if="${editingMenuGroupCode == null}">Додати розділ меню</h2>
+                <h2 th:if="${editingMenuGroupCode != null}">Редагувати розділ меню</h2>
+
+                <form class="admin-form"
+                      th:action="${editingMenuGroupCode == null}
+                          ? @{/admin/menu-groups}
+                          : @{'/admin/menu-groups/update/' + ${editingMenuGroupCode}}"
+                      th:object="${menuGroupForm}"
+                      method="post">
+
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <div class="form-group">
+                        <label for="title">Назва розділу</label>
+                        <input type="text"
+                               id="title"
+                               th:field="*{title}"
+                               placeholder="Наприклад: Модуль 1. Вступ в Java"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="code">Код розділу</label>
+                        <input type="text"
+                               id="code"
+                               th:field="*{code}"
+                               placeholder="Наприклад: module-1-intro"
+                               required>
+
+                        <small>
+                            Цей код використовується для прив’язки статей до розділу меню.
+                            Наприклад: module-1-intro
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sortOrder">Порядок сортування</label>
+                        <input type="number"
+                               id="sortOrder"
+                               th:field="*{sortOrder}"
+                               placeholder="Наприклад: 10"
+                               required>
+
+                        <small>
+                            Чим менше число, тим вище розділ буде показаний у меню.
+                        </small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit"
+                                class="save-button"
+                                th:text="${editingMenuGroupCode == null} ? 'Зберегти розділ' : 'Оновити розділ'">
+                            Зберегти розділ
+                        </button>
+
+                        <a th:if="${editingMenuGroupCode != null}"
+                           th:href="@{/admin/menu-groups}"
+                           class="cancel-edit-button">
+                            Скасувати
+                        </a>
+                    </div>
+                </form>
+            </section>
+
+            <section class="admin-menu-groups-section">
+                <h2>Усі розділи</h2>
+
+                <div class="empty-comments" th:if="${#lists.isEmpty(menuGroups)}">
+                    Розділів меню поки немає.
+                </div>
+
+                <div class="articles-table-wrapper" th:if="${!#lists.isEmpty(menuGroups)}">
+                    <table class="articles-table">
+                        <thead>
+                        <tr>
+                            <th>Назва</th>
+                            <th>Код</th>
+                            <th>Порядок</th>
+                            <th>Дії</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="group : ${menuGroups}">
+                            <td>
+                                <strong th:text="${group.title}">Назва</strong>
+                            </td>
+
+                            <td>
+                                <code th:text="${group.code}">code</code>
+                            </td>
+
+                            <td th:text="${group.sortOrder}">10</td>
+
+                            <td>
+                                <div class="table-actions">
+                                    <a class="table-link edit-link"
+                                       th:href="@{'/admin/menu-groups/edit/' + ${group.code}}">
+                                        Редагувати
+                                    </a>
+
+                                    <form class="delete-form"
+                                          th:action="@{'/admin/menu-groups/delete/' + ${group.code}}"
+                                          method="post"
+                                          onsubmit="return confirm('Видалити цей розділ меню? Якщо до нього прив’язані статті, він не буде видалений.');">
+
+                                        <input type="hidden"
+                                               th:if="${_csrf != null}"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}">
+
+                                        <button type="submit" class="delete-button">
+                                            Видалити
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/layout :: rightSidebar}"></div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

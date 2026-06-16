@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Коментарі | Java Handbook</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<div class="page-layout">
+
+    <div th:replace="~{fragments/layout :: leftSidebar}"></div>
+
+    <main class="content">
+        <article class="article-card">
+            <h1>Коментарі</h1>
+
+            <p class="article-description">
+                Тут можна підтверджувати коментарі, переглядати опубліковані коментарі та видаляти непотрібні.
+            </p>
+
+            <div th:replace="~{fragments/admin-nav :: adminNav}"></div>
+
+            <section class="admin-section" id="comments-moderation">
+                <h2>Коментарі на модерації</h2>
+
+                <div class="empty-comments" th:if="${#lists.isEmpty(pendingComments)}">
+                    Немає коментарів на модерації.
+                </div>
+
+                <div class="admin-comments-list" th:if="${!#lists.isEmpty(pendingComments)}">
+                    <div class="admin-comment-card" th:each="comment : ${pendingComments}">
+                        <div class="admin-comment-meta">
+                            <div>
+                                <strong th:text="${comment.authorName}">Автор</strong>
+                                <span th:text="${#temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">
+                                    01.01.2026 12:00
+                                </span>
+                            </div>
+
+                            <a th:href="@{'/articles/' + ${comment.articleSlug} + '#comments'}"
+                               target="_blank">
+                                Перейти до статті
+                            </a>
+                        </div>
+
+                        <p class="admin-comment-text" th:text="${comment.content}">
+                            Текст коментаря
+                        </p>
+
+                        <div class="admin-comment-actions">
+                            <form th:action="@{'/admin/comments/approve/' + ${comment.id}}"
+                                  method="post">
+                                <input type="hidden"
+                                       th:if="${_csrf != null}"
+                                       th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}">
+
+                                <button type="submit" class="save-button">
+                                    Опублікувати
+                                </button>
+                            </form>
+
+                            <form th:action="@{'/admin/comments/delete/' + ${comment.id}}"
+                                  method="post"
+                                  onsubmit="return confirm('Видалити цей коментар?');">
+                                <input type="hidden"
+                                       th:if="${_csrf != null}"
+                                       th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}">
+
+                                <button type="submit" class="delete-button">
+                                    Видалити
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="approved-comments">
+                <h2>Опубліковані коментарі</h2>
+
+                <div class="empty-comments" th:if="${#lists.isEmpty(approvedComments)}">
+                    Опублікованих коментарів поки немає.
+                </div>
+
+                <div class="admin-comments-list" th:if="${!#lists.isEmpty(approvedComments)}">
+                    <div class="admin-comment-card" th:each="comment : ${approvedComments}">
+                        <div class="admin-comment-meta">
+                            <div>
+                                <strong th:text="${comment.authorName}">Автор</strong>
+                                <span th:text="${#temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">
+                                    01.01.2026 12:00
+                                </span>
+                            </div>
+
+                            <a th:href="@{'/articles/' + ${comment.articleSlug} + '#comments'}"
+                               target="_blank">
+                                Перейти до статті
+                            </a>
+                        </div>
+
+                        <p class="admin-comment-text" th:text="${comment.content}">
+                            Текст коментаря
+                        </p>
+
+                        <div class="admin-comment-actions">
+                            <form th:action="@{'/admin/comments/delete/' + ${comment.id}}"
+                                  method="post"
+                                  onsubmit="return confirm('Видалити цей опублікований коментар?');">
+                                <input type="hidden"
+                                       th:if="${_csrf != null}"
+                                       th:name="${_csrf.parameterName}"
+                                       th:value="${_csrf.token}">
+
+                                <button type="submit" class="delete-button">
+                                    Видалити
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/layout :: rightSidebar}"></div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

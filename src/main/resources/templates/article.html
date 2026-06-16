@@ -24,6 +24,62 @@
             <div class="article-content" th:utext="${content}">
                 Текст статті
             </div>
+
+            <section class="comments-section" id="comments">
+                <h2>Коментарі</h2>
+
+                <div class="alert-success" th:if="${commentMessage}" th:text="${commentMessage}">
+                    Дякуємо! Ваш коментар відправлено на модерацію.
+                </div>
+
+                <form class="comment-form"
+                      th:action="@{'/articles/' + ${activePage} + '/comments'}"
+                      th:object="${commentForm}"
+                      method="post">
+
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <input type="hidden" name="parentCommentId">
+
+                    <div class="form-group">
+                        <label for="authorName">Ваше ім’я</label>
+                        <input type="text"
+                               id="authorName"
+                               th:field="*{authorName}"
+                               maxlength="100"
+                               placeholder="Наприклад: Василь"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="commentContent">Коментар</label>
+                        <textarea id="commentContent"
+                                  th:field="*{content}"
+                                  rows="5"
+                                  placeholder="Напишіть коментар..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="save-button">
+                            Додати коментар
+                        </button>
+                    </div>
+                </form>
+
+                <div class="comments-list">
+                    <div class="empty-comments" th:if="${#lists.isEmpty(comments)}">
+                        Коментарів поки немає. Будьте першим.
+                    </div>
+
+                    <div th:each="node : ${comments}">
+                        <div th:replace="~{article :: commentNode(${node})}"></div>
+                    </div>
+                </div>
+            </section>
         </article>
     </main>
 
@@ -32,6 +88,73 @@
 </div>
 
 <div th:replace="~{fragments/layout :: footer}"></div>
+
+<div th:fragment="commentNode(node)" th:if="${node != null}" class="comment-node">
+    <div class="comment-card">
+        <div class="comment-header">
+            <strong th:text="${node.comment.authorName}">Автор</strong>
+            <span th:text="${#temporals.format(node.comment.createdAt, 'dd.MM.yyyy HH:mm')}">
+                01.01.2026 12:00
+            </span>
+        </div>
+
+        <p class="comment-text" th:text="${node.comment.content}">
+            Текст коментаря
+        </p>
+
+        <button type="button"
+                class="reply-toggle-button"
+                th:attr="data-reply-form-id=${'reply-form-' + node.comment.id}">
+            Відповісти
+        </button>
+
+        <form class="comment-form reply-form"
+              th:id="${'reply-form-' + node.comment.id}"
+              th:action="@{'/articles/' + ${activePage} + '/comments'}"
+              method="post">
+
+            <input type="hidden"
+                   th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}">
+
+            <input type="hidden"
+                   name="parentCommentId"
+                   th:value="${node.comment.id}">
+
+            <div class="form-group">
+                <label th:for="${'reply-author-' + node.comment.id}">Ваше ім’я</label>
+                <input type="text"
+                       th:id="${'reply-author-' + node.comment.id}"
+                       name="authorName"
+                       maxlength="100"
+                       placeholder="Наприклад: Василь"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label th:for="${'reply-content-' + node.comment.id}">Ваша відповідь</label>
+                <textarea th:id="${'reply-content-' + node.comment.id}"
+                          name="content"
+                          rows="4"
+                          placeholder="Напишіть відповідь..."
+                          required></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="save-button">
+                    Надіслати відповідь
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="comment-replies" th:if="${!#lists.isEmpty(node.replies)}">
+        <div th:each="replyNode : ${node.replies}">
+            <div th:replace="~{article :: commentNode(${replyNode})}"></div>
+        </div>
+    </div>
+</div>
 
 <script src="/js/main.js"></script>
 </body>

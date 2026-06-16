@@ -10,4 +10,22 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest(".reply-toggle-button");
+
+        if (!button) {
+            return;
+        }
+
+        const formId = button.getAttribute("data-reply-form-id");
+        const form = document.getElementById(formId);
+
+        if (!form) {
+            console.log("Reply form not found:", formId);
+            return;
+        }
+
+        form.classList.toggle("open");
+    });
 });

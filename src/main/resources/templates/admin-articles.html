@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Статті | Java Handbook</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<div class="page-layout">
+
+    <div th:replace="~{fragments/layout :: leftSidebar}"></div>
+
+    <main class="content">
+        <article class="article-card">
+            <h1>Статті</h1>
+
+            <p class="article-description">
+                Тут можна створювати, редагувати та видаляти статті Java Handbook.
+            </p>
+
+            <div th:replace="~{fragments/admin-nav :: adminNav}"></div>
+
+            <section class="admin-section">
+                <h2 th:if="${editingSlug == null}">Додати статтю</h2>
+                <h2 th:if="${editingSlug != null}">Редагувати статтю</h2>
+
+                <form class="admin-form"
+                      th:action="${editingSlug == null}
+                          ? @{/admin/articles}
+                          : @{'/admin/articles/update/' + ${editingSlug}}"
+                      th:object="${articleForm}"
+                      method="post">
+
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <div class="form-group">
+                        <label for="title">Назва статті</label>
+                        <input type="text"
+                               id="title"
+                               th:field="*{title}"
+                               placeholder="Наприклад: Що таке Java?"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Короткий опис</label>
+                        <textarea id="description"
+                                  th:field="*{description}"
+                                  rows="3"
+                                  placeholder="Короткий опис для вступу або SEO"
+                                  required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="slug">Slug / URL</label>
+
+                        <div class="slug-row">
+                            <input type="text"
+                                   id="slug"
+                                   th:field="*{slug}"
+                                   placeholder="Наприклад: shcho-take-java"
+                                   required>
+
+                            <button type="button"
+                                    class="slug-button"
+                                    onclick="generateSlugFromTitle()">
+                                Згенерувати
+                            </button>
+                        </div>
+
+                        <small>
+                            Slug використовується в адресі статті. Наприклад:
+                            /articles/shcho-take-java
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="menuGroup">Розділ меню</label>
+                        <select id="menuGroup"
+                                th:field="*{menuGroup}">
+                            <option value="">Без розділу</option>
+
+                            <option th:each="group : ${menuGroups}"
+                                    th:value="${group.code}"
+                                    th:text="${group.title}">
+                                Розділ
+                            </option>
+                        </select>
+
+                        <small>
+                            Обери, у якому розділі лівого меню буде показана стаття.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content">HTML-контент статті</label>
+
+                        <div class="editor-actions">
+                            <button type="button" onclick="insertText('<h2>', '</h2>')">
+                                H2
+                            </button>
+
+                            <button type="button" onclick="insertText('<p>', '</p>')">
+                                P
+                            </button>
+
+                            <button type="button" onclick="insertText('<strong>', '</strong>')">
+                                Bold
+                            </button>
+
+                            <button type="button" onclick="insertText('<pre><code>', '</code></pre>')">
+                                Code
+                            </button>
+
+                            <button type="button" onclick="insertText('<ul>\n<li>', '</li>\n</ul>')">
+                                UL
+                            </button>
+                        </div>
+
+                        <textarea id="content"
+                                  th:field="*{content}"
+                                  rows="18"
+                                  placeholder="HTML-контент статті"
+                                  required></textarea>
+
+                        <small>
+                            Тут можна вставляти HTML: &lt;h2&gt;, &lt;p&gt;,
+                            &lt;pre&gt;&lt;code&gt; тощо.
+                        </small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit"
+                                class="save-button"
+                                th:text="${editingSlug == null} ? 'Зберегти статтю' : 'Оновити статтю'">
+                            Зберегти статтю
+                        </button>
+
+                        <a th:if="${editingSlug != null}"
+                           th:href="@{/admin/articles}"
+                           class="cancel-edit-button">
+                            Скасувати
+                        </a>
+                    </div>
+                </form>
+            </section>
+
+            <section class="admin-articles-section">
+                <h2>Усі статті</h2>
+
+                <div class="empty-comments" th:if="${#lists.isEmpty(articles)}">
+                    Статей поки немає.
+                </div>
+
+                <div class="articles-table-wrapper" th:if="${!#lists.isEmpty(articles)}">
+                    <table class="articles-table">
+                        <thead>
+                        <tr>
+                            <th>Назва</th>
+                            <th>Slug</th>
+                            <th>Розділ</th>
+                            <th>Опис</th>
+                            <th>Дії</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="article : ${articles}">
+                            <td>
+                                <strong th:text="${article.title()}">Назва</strong>
+                            </td>
+
+                            <td>
+                                <code th:text="${article.slug()}">slug</code>
+                            </td>
+
+                            <td th:text="${article.menuGroupTitle()}">
+                                Розділ
+                            </td>
+
+                            <td th:text="${article.description()}">
+                                Опис
+                            </td>
+
+                            <td>
+                                <div class="table-actions">
+                                    <a class="table-link edit-link"
+                                       th:href="@{'/admin/articles/edit/' + ${article.slug()}}">
+                                        Редагувати
+                                    </a>
+
+                                    <a class="table-link"
+                                       th:href="@{'/articles/' + ${article.slug()}}"
+                                       target="_blank">
+                                        Переглянути
+                                    </a>
+
+                                    <form class="delete-form"
+                                          th:action="@{'/admin/articles/delete/' + ${article.slug()}}"
+                                          method="post"
+                                          onsubmit="return confirm('Видалити цю статтю?');">
+
+                                        <input type="hidden"
+                                               th:if="${_csrf != null}"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}">
+
+                                        <button type="submit" class="delete-button">
+                                            Видалити
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/layout :: rightSidebar}"></div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="/js/admin.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav th:fragment="adminNav" class="admin-nav">
+    <a th:href="@{/admin}"
+       th:classappend="${activeAdminPage == 'dashboard'} ? ' active'">
+        Панель
+    </a>
+
+    <a th:href="@{/admin/articles}"
+       th:classappend="${activeAdminPage == 'articles'} ? ' active'">
+        Статті
+    </a>
+
+    <a th:href="@{/admin/menu-groups}"
+       th:classappend="${activeAdminPage == 'menu'} ? ' active'">
+        Розділи меню
+    </a>
+
+    <a th:href="@{/admin/comments}"
+       th:classappend="${activeAdminPage == 'comments'} ? ' active'">
+        Коментарі
+    </a>
+</nav>
+
+</body>
+</html>

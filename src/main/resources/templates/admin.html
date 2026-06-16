@@ -2,7 +2,7 @@
 <html lang="uk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Адмінка | Java Handbook</title>
+    <title>Адмін-панель | Java Handbook</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -15,255 +15,44 @@
 
     <main class="content">
         <article class="article-card">
-            <h1 th:text="${editMode} ? 'Редагування статті' : 'Адмінка'">
-                Адмінка
-            </h1>
+            <h1>Адмін-панель</h1>
 
-            <div class="alert-error" th:if="${errorMessage}" th:text="${errorMessage}">
-                Повідомлення про помилку
-            </div>
-
-            <p class="article-description"
-               th:text="${editMode} ? 'Тут можна відредагувати обрану статтю.' : 'Тут можна додати нову статтю до Java Handbook. Поки що стаття зберігається тільки в пам’яті програми.'">
-                Тут можна додати нову статтю до Java Handbook.
+            <p class="article-description">
+                Тут можна керувати статтями, розділами меню та коментарями сайту.
             </p>
 
-            <form class="admin-form"
-                  th:action="${editMode} ? @{/admin/articles/update} : @{/admin/articles}"
-                  th:object="${articleForm}"
-                  method="post">
+            <div th:replace="~{fragments/admin-nav :: adminNav}"></div>
 
-                <input type="hidden" th:field="*{originalSlug}">
+            <section class="admin-dashboard">
+                <div class="admin-dashboard-grid">
 
-                <div class="form-group">
-                    <label for="title">Заголовок статті</label>
-                    <input type="text"
-                           id="title"
-                           th:field="*{title}"
-                           placeholder="Наприклад: Що таке JVM?"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="slug">Slug для URL</label>
-
-                    <div class="slug-row">
-                        <input type="text"
-                               id="slug"
-                               th:field="*{slug}"
-                               placeholder="Наприклад: java-jvm"
-                               required>
-
-                        <button type="button" class="slug-button" onclick="generateSlugFromTitle()">
-                            Згенерувати
-                        </button>
-                    </div>
-
-                    <small>
-                        Slug автоматично генерується із заголовка статті.
-                        Наприклад: <b>/articles/shcho-take-jvm</b>
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Короткий опис</label>
-                    <input type="text"
-                           id="description"
-                           th:field="*{description}"
-                           placeholder="Короткий опис статті"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="menuGroup">Розділ меню</label>
-                    <select id="menuGroup" th:field="*{menuGroup}">
-                        <option th:each="group : ${menuGroups}"
-                                th:value="${group.code}"
-                                th:text="${group.title}">
-                            Java Core
-                        </option>
-                    </select>
-
-                    <small>
-                        Поки це поле використовується як підготовка до майбутнього динамічного меню.
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label for="content">Текст статті</label>
-
-                    <div class="editor-actions">
-                        <button type="button" onclick="insertHeading()">Вставити заголовок</button>
-                        <button type="button" onclick="insertParagraph()">Вставити абзац</button>
-                        <button type="button" onclick="insertCodeBlock()">Вставити блок коду</button>
-                        <button type="button" onclick="insertImage()">Вставити зображення</button>
-                    </div>
-
-                    <textarea id="content"
-                              th:field="*{content}"
-                              rows="18"
-                              placeholder="Введи текст статті..."
-                              required></textarea>
-
-                    <small>
-                        Можна використовувати HTML-теги:
-                        &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;pre&gt;, &lt;code&gt;, &lt;img&gt;.
-                    </small>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="save-button"
-                            th:text="${editMode} ? 'Оновити статтю' : 'Зберегти статтю'">
-                        Зберегти статтю
-                    </button>
-
-                    <a href="/admin" class="cancel-edit-button" th:if="${editMode}">
-                        Скасувати редагування
+                    <a class="admin-dashboard-card" th:href="@{/admin/articles}">
+                        <h2>Статті</h2>
+                        <p>Керування матеріалами сайту.</p>
+                        <strong th:text="${articlesCount}">0</strong>
                     </a>
-                </div>
 
-            </form>
-            <section class="admin-articles-section">
-                <h2>Усі статті</h2>
+                    <a class="admin-dashboard-card" th:href="@{/admin/menu-groups}">
+                        <h2>Розділи меню</h2>
+                        <p>Керування групами лівого меню.</p>
+                        <strong th:text="${menuGroupsCount}">0</strong>
+                    </a>
 
-                <div class="articles-table-wrapper">
-                    <table class="articles-table">
-                        <thead>
-                        <tr>
-                            <th>Назва</th>
-                            <th>Розділ</th>
-                            <th>Slug</th>
-                            <th>Опис</th>
-                            <th>Дії</th>
-                        </tr>
-                        </thead>
+                    <a class="admin-dashboard-card" th:href="@{/admin/comments}">
+                        <h2>Коментарі</h2>
+                        <p>Модерація та видалення коментарів.</p>
 
-                        <tbody>
-                        <tr th:each="article : ${articles}">
-                            <td th:text="${article.title()}">Назва статті</td>
-                            <td th:text="${article.menuGroupTitle()}">Java Core</td>
-                            <td>
-                                <code th:text="${article.slug()}">java-types</code>
-                            </td>
-                            <td th:text="${article.description()}">Опис</td>
-                            <td class="table-actions">
-                                <a class="table-link"
-                                   th:href="@{'/articles/' + ${article.slug()}}">
-                                    Відкрити
-                                </a>
+                        <span>
+                            На модерації:
+                            <strong th:text="${pendingCommentsCount}">0</strong>
+                        </span>
 
-                                <a class="table-link edit-link"
-                                   th:href="@{'/admin/articles/edit/' + ${article.slug()}}">
-                                    Редагувати
-                                </a>
+                        <span>
+                            Опубліковано:
+                            <strong th:text="${approvedCommentsCount}">0</strong>
+                        </span>
+                    </a>
 
-                                <form th:action="@{'/admin/articles/delete/' + ${article.slug()}}"
-                                      method="post"
-                                      class="delete-form"
-                                      onsubmit="return confirm('Видалити цю статтю?');">
-                                    <button type="submit" class="delete-button">
-                                        Видалити
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            <section class="admin-menu-groups-section">
-                <h2 th:text="${menuGroupEditMode} ? 'Редагування розділу' : 'Додати новий розділ'">
-                    Додати новий розділ
-                </h2>
-
-                <form class="admin-form"
-                      th:action="${menuGroupEditMode} ? @{/admin/menu-groups/update} : @{/admin/menu-groups}"
-                      th:object="${menuGroupForm}"
-                      method="post">
-
-                    <input type="hidden" th:field="*{originalCode}">
-
-                    <div class="form-group">
-                        <label for="groupTitle">Назва розділу</label>
-                        <input type="text"
-                               id="groupTitle"
-                               th:field="*{title}"
-                               placeholder="Наприклад: SQL"
-                               required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="groupCode">Код розділу</label>
-                        <input type="text"
-                               id="groupCode"
-                               th:field="*{code}"
-                               placeholder="Наприклад: sql"
-                               required>
-
-                        <small>
-                            Код використовується всередині програми. Наприклад:
-                            <b>java</b>, <b>spring</b>, <b>sql</b>.
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="sortOrder">Порядок відображення</label>
-                        <input type="number"
-                               id="sortOrder"
-                               th:field="*{sortOrder}"
-                               placeholder="Наприклад: 5">
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="save-button"
-                                th:text="${menuGroupEditMode} ? 'Оновити розділ' : 'Додати розділ'">
-                            Додати розділ
-                        </button>
-
-                        <a href="/admin" class="cancel-edit-button" th:if="${menuGroupEditMode}">
-                            Скасувати редагування
-                        </a>
-                    </div>
-                </form>
-
-                <h2>Усі розділи</h2>
-
-                <div class="articles-table-wrapper">
-                    <table class="articles-table">
-                        <thead>
-                        <tr>
-                            <th>Назва</th>
-                            <th>Код</th>
-                            <th>Порядок</th>
-                            <th>Дії</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr th:each="group : ${menuGroups}">
-                            <td th:text="${group.title}">Java Core</td>
-                            <td>
-                                <code th:text="${group.code}">java</code>
-                            </td>
-                            <td th:text="${group.sortOrder}">1</td>
-                            <td class="table-actions">
-                                <a class="table-link edit-link"
-                                   th:href="@{'/admin/menu-groups/edit/' + ${group.code}}">
-                                    Редагувати
-                                </a>
-
-                                <form th:action="@{'/admin/menu-groups/delete/' + ${group.code}}"
-                                      method="post"
-                                      class="delete-form"
-                                      onsubmit="return confirm('Видалити цей розділ? Якщо в ньому є статті, видалення буде заборонено.');">
-                                    <button type="submit" class="delete-button">
-                                        Видалити
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
                 </div>
             </section>
         </article>
@@ -276,6 +65,5 @@
 <div th:replace="~{fragments/layout :: footer}"></div>
 
 <script src="/js/main.js"></script>
-<script src="/js/admin.js"></script>
 </body>
 </html>

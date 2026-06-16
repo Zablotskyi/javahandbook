@@ -5,6 +5,7 @@ import com.example.javahandbook.dto.ArticleListItem;
 import com.example.javahandbook.dto.MenuGroupForm;
 import com.example.javahandbook.entity.MenuGroup;
 import com.example.javahandbook.model.ArticleData;
+import com.example.javahandbook.service.ArticleCommentService;
 import com.example.javahandbook.service.ArticleService;
 import com.example.javahandbook.service.MenuGroupService;
 import org.springframework.stereotype.Controller;
@@ -20,40 +21,39 @@ public class AdminController {
 
     private final ArticleService articleService;
     private final MenuGroupService menuGroupService;
+    private final ArticleCommentService articleCommentService;
 
     public AdminController(ArticleService articleService,
-                           MenuGroupService menuGroupService) {
+                           MenuGroupService menuGroupService,
+                           ArticleCommentService articleCommentService) {
         this.articleService = articleService;
         this.menuGroupService = menuGroupService;
+        this.articleCommentService = articleCommentService;
     }
 
     @GetMapping("/admin")
-    public String adminPage(Model model) {
-        model.addAttribute("activePage", "admin");
-        model.addAttribute("articleForm", new ArticleForm());
-        model.addAttribute("menuGroupForm", new MenuGroupForm());
-        model.addAttribute("editMode", false);
-        model.addAttribute("menuGroupEditMode", false);
-        addAdminModelAttributes(model);
+    public String adminDashboard(Model model) {
+        model.addAttribute("activePage", "");
+        model.addAttribute("activeAdminPage", "dashboard");
+
+        model.addAttribute("articlesCount", getArticleListItems().size());
+        model.addAttribute("menuGroupsCount", menuGroupService.findAll().size());
+        model.addAttribute("pendingCommentsCount", articleCommentService.findPendingComments().size());
+        model.addAttribute("approvedCommentsCount", articleCommentService.findApprovedComments().size());
 
         return "admin";
     }
 
-    @PostMapping("/admin/articles")
-    public String addArticle(ArticleForm articleForm) {
-        String slug = normalizeSlug(articleForm.getSlug());
+    @GetMapping("/admin/articles")
+    public String adminArticles(Model model) {
+        model.addAttribute("activePage", "");
+        model.addAttribute("activeAdminPage", "articles");
 
-        ArticleData articleData = new ArticleData(
-                articleForm.getTitle(),
-                articleForm.getDescription(),
-                slug,
-                articleForm.getMenuGroup(),
-                articleForm.getContent()
-        );
+        model.addAttribute("articleForm", new ArticleForm());
+        model.addAttribute("articles", getArticleListItems());
+        model.addAttribute("menuGroups", menuGroupService.findAll());
 
-        articleService.addArticle(articleData);
-
-        return "redirect:/admin";
+        return "admin-articles";
     }
 
     @GetMapping("/admin/articles/edit/{slug}")
@@ -61,60 +61,72 @@ public class AdminController {
         ArticleData article = articleService.findBySlug(slug);
 
         if (article == null) {
-            return "redirect:/admin";
+            return "redirect:/admin/articles";
         }
 
         ArticleForm articleForm = new ArticleForm();
-        articleForm.setOriginalSlug(article.slug());
         articleForm.setTitle(article.title());
-        articleForm.setSlug(article.slug());
         articleForm.setDescription(article.description());
-        articleForm.setMenuGroup(article.menuGroup());
+        articleForm.setSlug(article.slug());
         articleForm.setContent(article.content());
+        articleForm.setMenuGroup(article.menuGroup());
 
-        model.addAttribute("activePage", "admin");
+        model.addAttribute("activePage", "");
+        model.addAttribute("activeAdminPage", "articles");
         model.addAttribute("articleForm", articleForm);
-        model.addAttribute("menuGroupForm", new MenuGroupForm());
-        model.addAttribute("editMode", true);
-        model.addAttribute("menuGroupEditMode", false);
-        addAdminModelAttributes(model);
+        model.addAttribute("editingSlug", article.slug());
+        model.addAttribute("articles", getArticleListItems());
+        model.addAttribute("menuGroups", menuGroupService.findAll());
 
-        return "admin";
+        return "admin-articles";
     }
 
-    @PostMapping("/admin/articles/update")
-    public String updateArticle(ArticleForm articleForm) {
-        String originalSlug = normalizeSlug(articleForm.getOriginalSlug());
-        String newSlug = normalizeSlug(articleForm.getSlug());
-
+    @PostMapping("/admin/articles")
+    public String saveArticle(ArticleForm articleForm) {
         ArticleData articleData = new ArticleData(
                 articleForm.getTitle(),
                 articleForm.getDescription(),
-                newSlug,
+                articleForm.getSlug(),
                 articleForm.getMenuGroup(),
                 articleForm.getContent()
         );
 
-        articleService.updateArticle(originalSlug, articleData);
+        articleService.addArticle(articleData);
 
-        return "redirect:/admin";
+        return "redirect:/admin/articles";
+    }
+
+    @PostMapping("/admin/articles/update/{slug}")
+    public String updateArticle(@PathVariable String slug,
+                                ArticleForm articleForm) {
+        ArticleData articleData = new ArticleData(
+                articleForm.getTitle(),
+                articleForm.getDescription(),
+                articleForm.getSlug(),
+                articleForm.getMenuGroup(),
+                articleForm.getContent()
+        );
+
+        articleService.updateArticle(slug, articleData);
+
+        return "redirect:/admin/articles";
     }
 
     @PostMapping("/admin/articles/delete/{slug}")
     public String deleteArticle(@PathVariable String slug) {
         articleService.deleteBySlug(slug);
-        return "redirect:/admin";
+        return "redirect:/admin/articles";
     }
 
-    @PostMapping("/admin/menu-groups")
-    public String addMenuGroup(MenuGroupForm menuGroupForm) {
-        menuGroupService.addMenuGroup(
-                menuGroupForm.getCode(),
-                menuGroupForm.getTitle(),
-                menuGroupForm.getSortOrder()
-        );
+    @GetMapping("/admin/menu-groups")
+    public String adminMenuGroups(Model model) {
+        model.addAttribute("activePage", "");
+        model.addAttribute("activeAdminPage", "menu");
 
-        return "redirect:/admin";
+        model.addAttribute("menuGroupForm", new MenuGroupForm());
+        model.addAttribute("menuGroups", menuGroupService.findAll());
+
+        return "admin-menu-groups";
     }
 
     @GetMapping("/admin/menu-groups/edit/{code}")
@@ -122,59 +134,74 @@ public class AdminController {
         MenuGroup menuGroup = menuGroupService.findByCode(code);
 
         if (menuGroup == null) {
-            return "redirect:/admin";
+            return "redirect:/admin/menu-groups";
         }
 
         MenuGroupForm menuGroupForm = new MenuGroupForm();
-        menuGroupForm.setOriginalCode(menuGroup.getCode());
         menuGroupForm.setCode(menuGroup.getCode());
         menuGroupForm.setTitle(menuGroup.getTitle());
         menuGroupForm.setSortOrder(menuGroup.getSortOrder());
 
-        model.addAttribute("activePage", "admin");
-        model.addAttribute("articleForm", new ArticleForm());
+        model.addAttribute("activePage", "");
+        model.addAttribute("activeAdminPage", "menu");
         model.addAttribute("menuGroupForm", menuGroupForm);
-        model.addAttribute("editMode", false);
-        model.addAttribute("menuGroupEditMode", true);
-        addAdminModelAttributes(model);
+        model.addAttribute("editingMenuGroupCode", menuGroup.getCode());
+        model.addAttribute("menuGroups", menuGroupService.findAll());
 
-        return "admin";
+        return "admin-menu-groups";
     }
 
-    @PostMapping("/admin/menu-groups/update")
-    public String updateMenuGroup(MenuGroupForm menuGroupForm) {
-        menuGroupService.updateMenuGroup(
-                menuGroupForm.getOriginalCode(),
+    @PostMapping("/admin/menu-groups")
+    public String saveMenuGroup(MenuGroupForm menuGroupForm) {
+        menuGroupService.addMenuGroup(
                 menuGroupForm.getCode(),
                 menuGroupForm.getTitle(),
                 menuGroupForm.getSortOrder()
         );
 
-        return "redirect:/admin";
+        return "redirect:/admin/menu-groups";
+    }
+
+    @PostMapping("/admin/menu-groups/update/{code}")
+    public String updateMenuGroup(@PathVariable String code,
+                                  MenuGroupForm menuGroupForm) {
+        menuGroupService.updateMenuGroup(
+                code,
+                menuGroupForm.getCode(),
+                menuGroupForm.getTitle(),
+                menuGroupForm.getSortOrder()
+        );
+
+        return "redirect:/admin/menu-groups";
     }
 
     @PostMapping("/admin/menu-groups/delete/{code}")
-    public String deleteMenuGroup(@PathVariable String code, Model model) {
-        boolean deleted = menuGroupService.deleteMenuGroupIfEmpty(code);
-
-        if (!deleted) {
-            model.addAttribute("activePage", "admin");
-            model.addAttribute("articleForm", new ArticleForm());
-            model.addAttribute("menuGroupForm", new MenuGroupForm());
-            model.addAttribute("editMode", false);
-            model.addAttribute("menuGroupEditMode", false);
-            model.addAttribute("errorMessage", "Неможливо видалити розділ, тому що в ньому є статті. Спочатку перемістіть або видаліть статті цього розділу.");
-            addAdminModelAttributes(model);
-
-            return "admin";
-        }
-
-        return "redirect:/admin";
+    public String deleteMenuGroup(@PathVariable String code) {
+        menuGroupService.deleteMenuGroupIfEmpty(code);
+        return "redirect:/admin/menu-groups";
     }
 
-    private void addAdminModelAttributes(Model model) {
-        model.addAttribute("articles", getArticleListItems());
-        model.addAttribute("menuGroups", menuGroupService.findAll());
+    @GetMapping("/admin/comments")
+    public String adminComments(Model model) {
+        model.addAttribute("activePage", "");
+        model.addAttribute("activeAdminPage", "comments");
+
+        model.addAttribute("pendingComments", articleCommentService.findPendingComments());
+        model.addAttribute("approvedComments", articleCommentService.findApprovedComments());
+
+        return "admin-comments";
+    }
+
+    @PostMapping("/admin/comments/approve/{id}")
+    public String approveComment(@PathVariable Long id) {
+        articleCommentService.approveComment(id);
+        return "redirect:/admin/comments";
+    }
+
+    @PostMapping("/admin/comments/delete/{id}")
+    public String deleteComment(@PathVariable Long id) {
+        articleCommentService.deleteComment(id);
+        return "redirect:/admin/comments";
     }
 
     private List<ArticleListItem> getArticleListItems() {
@@ -188,12 +215,5 @@ public class AdminController {
                         articleService.getMenuGroupTitle(article.menuGroup())
                 ))
                 .toList();
-    }
-
-    private String normalizeSlug(String slug) {
-        return slug
-                .trim()
-                .toLowerCase()
-                .replace(" ", "-");
     }
 }
